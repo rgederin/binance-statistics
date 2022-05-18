@@ -14,12 +14,9 @@ public class BinanceWebSocketClient extends WebSocketClient {
 
     private String streamsParams;
 
-//    public BinanceWebSocketClient(URI serverUri) {
-//        super(serverUri);
-//    }
-
-    public BinanceWebSocketClient(URI serverUri) {
+    public BinanceWebSocketClient(URI serverUri, String streamsParams) {
         super(serverUri);
+        this.streamsParams = streamsParams;
     }
 
 
@@ -27,10 +24,7 @@ public class BinanceWebSocketClient extends WebSocketClient {
     public void onOpen(ServerHandshake handshakedata) {
         send("{\n" +
                 "  \"method\": \"SUBSCRIBE\",\n" +
-                "  \"params\": [\n" +
-                "    \"ethbtc@trade\",\n" +
-                "    \"bnbbtc@trade\"\n" +
-                "  ],\n" +
+                "  \"params\": " + streamsParams + ",\n" +
                 "  \"id\": 1\n" +
                 "}");
         System.out.println("opened connection");
@@ -38,7 +32,7 @@ public class BinanceWebSocketClient extends WebSocketClient {
 
     @Override
     public void onMessage(String s) {
-        System.out.println("received: " + s);
+//        System.out.println("received: " + s);
 
         TradeStreamEntity tradeStreamEntity = new Gson().fromJson(s, TradeStreamEntity.class);
         if (null != tradeStreamEntity.getData())
@@ -51,10 +45,7 @@ public class BinanceWebSocketClient extends WebSocketClient {
     public void onClose(int code, String reason, boolean remote) {
         send("{\n" +
                 "  \"method\": \"UNSUBSCRIBE\",\n" +
-                "  \"params\": [\n" +
-                "    \"ethbtc@trade\",\n" +
-                "    \"bnbbtc@trade\"\n" +
-                "  ],\n" +
+                "  \"params\": " + streamsParams + ",\n" +
                 "  \"id\": 312\n" +
                 "}");
         // The close codes are documented in class org.java_websocket.framing.CloseFrame
@@ -66,15 +57,9 @@ public class BinanceWebSocketClient extends WebSocketClient {
 
     @Override
     public void onError(Exception e) {
-        send("{\n" +
-                "  \"method\": \"UNSUBSCRIBE\",\n" +
-                "  \"params\": [\n" +
-                "    \"btcusdt@depth\"\n" +
-                "  ],\n" +
-                "  \"id\": 312\n" +
-                "}");
+
         // The close codes are documented in class org.java_websocket.framing.CloseFrame
 
-        System.out.println("error");
+        System.out.println(e);
     }
 }

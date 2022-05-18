@@ -1,10 +1,12 @@
 package com.binance.controller;
 
+import com.binance.model.SymbolStatistic;
 import com.binance.model.dto.SymbolsDto;
 import com.binance.service.StatisticsService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,5 +26,10 @@ public class StatisticsController {
     @GetMapping("/symbols")
     public SymbolsDto getSymbols(){
         return statisticsService.getBinanceSymbols();
+    }
+
+    @GetMapping("/{symbol}")
+    public SymbolStatistic getSymbolStatistics(@PathVariable String symbol){
+        return statisticsService.getBinanceSymbolStatistic(symbol);
     }
 }

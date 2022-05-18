@@ -1,5 +1,7 @@
 package com.binance.service;
 
+import com.binance.StatisticsCalculator;
+import com.binance.model.SymbolStatistic;
 import com.binance.model.dto.SymbolsDto;
 import com.binance.model.generated.Symbol;
 import com.binance.model.generated.Symbols;
@@ -27,5 +29,9 @@ public class StatisticsService {
                 .collect(Collectors.toList()));
 
         return symbolsDto;
+    }
+
+    public SymbolStatistic getBinanceSymbolStatistic(String symbol) {
+        return StatisticsCalculator.statisticsHashMap.getOrDefault(symbol.toUpperCase(), null);
     }
 }

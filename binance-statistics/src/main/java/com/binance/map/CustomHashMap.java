@@ -2,9 +2,15 @@ package com.binance.map;
 
 import com.binance.model.SymbolStatistic;
 
+/**
+ * Quite straight forward hash map implementation using separate chaining and static bucket array
+ * Number of buckets in initial array is 2048 in order to avoid collisions.
+ * <p>
+ * TODO - implements dynamic resizing logic
+ */
 public class CustomHashMap {
 
-    private static final int NUMBER_OF_BUCKETS = 1024;
+    private static final int NUMBER_OF_BUCKETS = 2048;
 
     private Node[] buckets;
 
@@ -12,10 +18,7 @@ public class CustomHashMap {
         buckets = new Node[NUMBER_OF_BUCKETS];
     }
 
-    /**
-     * Returns the value to which the specified key is mapped, or -1 if this map contains no mapping
-     * for the key
-     */
+
     public SymbolStatistic get(String key) {
         int index = index(key);
         int hash = hash(key);
@@ -34,6 +37,9 @@ public class CustomHashMap {
         return null;
     }
 
+    /**
+     * If bucket is not empty - put element in the hand made linked list
+     */
     public void put(String key, SymbolStatistic value) {
         int index = index(key);
         int hash = hash(key);
@@ -79,11 +85,7 @@ public class CustomHashMap {
 
         @Override
         public String toString() {
-            return "Node{" +
-                    "key=" + key +
-                    ", value=" + value +
-                    ", next=" + next +
-                    '}';
+            return "Node{" + "key=" + key + ", value=" + value + ", next=" + next + '}';
         }
     }
 }

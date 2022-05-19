@@ -10,6 +10,9 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
 import java.util.Objects;
 
+/**
+ * Simple Web Socket client using some java lib
+ */
 @Slf4j
 public class BinanceWebSocketClient extends WebSocketClient {
 

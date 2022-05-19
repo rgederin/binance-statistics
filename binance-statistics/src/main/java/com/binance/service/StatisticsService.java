@@ -2,6 +2,7 @@ package com.binance.service;
 
 import com.binance.map.CustomHashMap;
 import com.binance.model.SymbolStatistic;
+import com.binance.model.dto.SymbolStatisticDto;
 import com.binance.model.dto.SymbolsDto;
 import com.binance.model.generated.Symbol;
 import com.binance.model.generated.Symbols;
@@ -20,38 +21,56 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class StatisticsService {
+    private static final String BINANCE_SYMBOLS_API_URL = "https://api.binance.com/api/v3/exchangeInfo";
     private final RestTemplate restTemplate;
 
     private final MedianCalculatorService medianCalculatorService;
 
     private final CustomHashMap statisticsHashMap = new CustomHashMap();
 
-    public SymbolsDto getBinanceSymbols(){
-        ResponseEntity<Symbols> response
-                = restTemplate.getForEntity("https://api.binance.com/api/v3/exchangeInfo" , Symbols.class);
+
+    /**
+     * Invoke binance API for getting all supported symbols.
+     * Using simple REST template for this
+     * TODO: add graceful exception handling
+     *
+     * @return DTO which will be returning by the corresponding controller
+     */
+    public SymbolsDto getBinanceSymbols() {
+        ResponseEntity<Symbols> response = restTemplate.getForEntity(BINANCE_SYMBOLS_API_URL, Symbols.class);
 
         SymbolsDto symbolsDto = new SymbolsDto();
 
-        symbolsDto.setBinanceSymbols(Objects.requireNonNull(response.getBody())
-                .getSymbols()
-                .stream()
-                .map(Symbol::getSymbol)
-                .collect(Collectors.toList()));
+        symbolsDto.setBinanceSymbols(Objects.requireNonNull(response.getBody()).getSymbols().stream().map(Symbol::getSymbol).collect(Collectors.toList()));
 
         return symbolsDto;
     }
 
-    public SymbolStatistic getBinanceSymbolStatistic(String symbol) {
-        return statisticsHashMap.get(symbol.toUpperCase());
+    public SymbolStatisticDto getBinanceSymbolStatistic(String symbol) {
+        SymbolStatistic symbolStatistic = statisticsHashMap.get(symbol.toUpperCase());
+
+        if (Objects.isNull(symbolStatistic)) {
+            return null;
+        }
+
+        return SymbolStatisticDto.builder().symbol(symbolStatistic.getSymbol()).appearance(symbolStatistic.getAppearance()).lastPrice(symbolStatistic.getLastPrice()).priceMedian(symbolStatistic.getPriceMedian()).build();
     }
 
-    public void updateSymbolsStatistics(TradeStreamEntity tradeStreamEntity){
+    /**
+     * Update statistics entry in the custom hash map
+     *
+     * @param tradeStreamEntity - event from the web socket
+     */
+    public void updateSymbolsStatistics(TradeStreamEntity tradeStreamEntity) {
         String symbolToUpdate = tradeStreamEntity.getData().getSymbol();
         double symbolLastPrice = Double.parseDouble(tradeStreamEntity.getData().getPrice());
 
-        if (statisticsHashMap.get(symbolToUpdate) != null){
+        // if entry already exists in the hash map
+        if (statisticsHashMap.get(symbolToUpdate) != null) {
+            //fetch existed value
             SymbolStatistic existedStatistics = statisticsHashMap.get(symbolToUpdate);
 
+            //create new value for given symbol, increase appearance and recalculate median
             SymbolStatistic updatedStatistics = new SymbolStatistic();
 
             updatedStatistics.setAppearance(existedStatistics.getAppearance() + 1);
@@ -66,6 +85,7 @@ public class StatisticsService {
 
             statisticsHashMap.put(symbolToUpdate, updatedStatistics);
         } else {
+            // such symbol not existed in the map, create new one
             SymbolStatistic updatedStatistics = new SymbolStatistic();
 
             updatedStatistics.setSymbol(symbolToUpdate);

@@ -1,5 +1,6 @@
 package com.binance.service;
 
+import com.binance.map.CustomHashMap;
 import com.binance.model.SymbolStatistic;
 import com.binance.model.dto.SymbolsDto;
 import com.binance.model.generated.Symbol;
@@ -23,7 +24,7 @@ public class StatisticsService {
 
     private final MedianCalculatorService medianCalculatorService;
 
-    private final Map<String, SymbolStatistic> statisticsHashMap = new ConcurrentHashMap<>();
+    private final CustomHashMap statisticsHashMap = new CustomHashMap();
 
     public SymbolsDto getBinanceSymbols(){
         ResponseEntity<Symbols> response
@@ -41,14 +42,14 @@ public class StatisticsService {
     }
 
     public SymbolStatistic getBinanceSymbolStatistic(String symbol) {
-        return statisticsHashMap.getOrDefault(symbol.toUpperCase(), null);
+        return statisticsHashMap.get(symbol.toUpperCase());
     }
 
     public void updateSymbolsStatistics(TradeStreamEntity tradeStreamEntity){
         String symbolToUpdate = tradeStreamEntity.getData().getSymbol();
         double symbolLastPrice = Double.parseDouble(tradeStreamEntity.getData().getPrice());
 
-        if (statisticsHashMap.containsKey(symbolToUpdate)){
+        if (statisticsHashMap.get(symbolToUpdate) != null){
             SymbolStatistic existedStatistics = statisticsHashMap.get(symbolToUpdate);
 
             SymbolStatistic updatedStatistics = new SymbolStatistic();

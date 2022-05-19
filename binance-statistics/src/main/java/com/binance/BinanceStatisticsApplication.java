@@ -21,7 +21,7 @@ public class BinanceStatisticsApplication {
     private static BinanceWebSocketClient binanceWebSocketClient;
 
     @PreDestroy
-    public void closeWebSocketConnections(){
+    public void closeWebSocketConnections() {
         System.out.println("close");
         binanceWebSocketClient.close();
     }
@@ -46,15 +46,15 @@ public class BinanceStatisticsApplication {
             webSocketUri.append(symbol.toLowerCase() + "@trade/");
             webSocketParams.append("\"" + symbol.toLowerCase() + "\"" + ",");
         });
-        webSocketUri.deleteCharAt(webSocketUri.length()-1);
-        webSocketParams.deleteCharAt(webSocketParams.length()-1);
+        webSocketUri.deleteCharAt(webSocketUri.length() - 1);
+        webSocketParams.deleteCharAt(webSocketParams.length() - 1);
 
         webSocketParams.append("]");
         System.out.println(webSocketUri);
         System.out.println(webSocketParams);
 
 
-                binanceWebSocketClient = new BinanceWebSocketClient(new URI(webSocketUri.toString()), webSocketParams.toString(), statisticsService);
+        binanceWebSocketClient = new BinanceWebSocketClient(new URI(webSocketUri.toString()), webSocketParams.toString(), statisticsService);
         binanceWebSocketClient.connect();
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 
+import javax.annotation.PreDestroy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -15,18 +16,26 @@ import java.util.List;
 @SpringBootApplication
 public class BinanceStatisticsApplication {
 
+    private static StatisticsService statisticsService;
+
+    private static BinanceWebSocketClient binanceWebSocketClient;
+
+    @PreDestroy
+    public void closeWebSocketConnections(){
+        System.out.println("close");
+        binanceWebSocketClient.close();
+    }
 
 
     public static void main(String[] args) throws URISyntaxException {
         ConfigurableApplicationContext appContext = SpringApplication.run(BinanceStatisticsApplication.class, args);
 
+        statisticsService = appContext.getBean(StatisticsService.class);
 
-        StatisticsService service = appContext.getBean(StatisticsService.class);
-
-        List<String> symbols = service.getBinanceSymbols()
+        List<String> symbols = statisticsService.getBinanceSymbols()
                 .getBinanceSymbols()
                 .stream()
-                .limit(200)
+                .limit(500)
                 .toList();
 
 
@@ -43,15 +52,9 @@ public class BinanceStatisticsApplication {
         webSocketParams.append("]");
         System.out.println(webSocketUri);
         System.out.println(webSocketParams);
-//        BinanceWebSocketClient c = new BinanceWebSocketClient(new URI(
-//                "wss://stream.binance.com:9443/ws/ethusdt@trade"));
 
-                BinanceWebSocketClient c = new BinanceWebSocketClient(new URI(webSocketUri.toString()), webSocketParams.toString(), service);
-        c.connect();
 
-      //  Thread.sleep(30 * 1000);
-
-     //   c.close();
+                binanceWebSocketClient = new BinanceWebSocketClient(new URI(webSocketUri.toString()), webSocketParams.toString(), statisticsService);
+        binanceWebSocketClient.connect();
     }
-
 }

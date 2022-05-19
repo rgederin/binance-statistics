@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.Collections;
 import java.util.PriorityQueue;
 
 @Data
@@ -15,7 +16,7 @@ public class SymbolStatistic {
     private String symbol;
     private long appearance;
     private double priceMedian;
-    private float lastPrice;
-    private PriorityQueue<Float> min = new PriorityQueue<>();
-    private PriorityQueue<Float> max = new PriorityQueue<>();
+    private double lastPrice;
+    private PriorityQueue<Double> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+    private PriorityQueue<Double> minHeap = new PriorityQueue<>();
 }

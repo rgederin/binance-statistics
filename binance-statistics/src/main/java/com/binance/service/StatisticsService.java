@@ -1,28 +1,36 @@
 package com.binance.service;
 
-import com.binance.StatisticsCalculator;
 import com.binance.model.SymbolStatistic;
 import com.binance.model.dto.SymbolsDto;
 import com.binance.model.generated.Symbol;
 import com.binance.model.generated.Symbols;
-import com.binance.repository.StatisticsRepository;
+import com.binance.model.gson.TradeStreamEntity;
+
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class StatisticsService {
-    private StatisticsRepository statisticsRepository;
+    private final RestTemplate restTemplate;
+
+    private final MedianCalculatorService medianCalculatorService;
+
+    private final HashMap<String, SymbolStatistic> statisticsHashMap = new HashMap<>();
 
     public SymbolsDto getBinanceSymbols(){
+        ResponseEntity<Symbols> response
+                = restTemplate.getForEntity("https://api.binance.com/api/v3/exchangeInfo" , Symbols.class);
+
         SymbolsDto symbolsDto = new SymbolsDto();
 
-        symbolsDto.setBinanceSymbols(statisticsRepository.getBinanceSymbols()
+        symbolsDto.setBinanceSymbols(Objects.requireNonNull(response.getBody())
                 .getSymbols()
                 .stream()
                 .map(Symbol::getSymbol)
@@ -32,6 +40,40 @@ public class StatisticsService {
     }
 
     public SymbolStatistic getBinanceSymbolStatistic(String symbol) {
-        return StatisticsCalculator.statisticsHashMap.getOrDefault(symbol.toUpperCase(), null);
+        return statisticsHashMap.getOrDefault(symbol.toUpperCase(), null);
+    }
+
+    public void updateSymbolsStatistics(TradeStreamEntity tradeStreamEntity){
+        String symbolToUpdate = tradeStreamEntity.getData().getSymbol();
+        double symbolLastPrice = Double.parseDouble(tradeStreamEntity.getData().getPrice());
+
+        if (statisticsHashMap.containsKey(symbolToUpdate)){
+            SymbolStatistic existedStatistics = statisticsHashMap.get(symbolToUpdate);
+
+            SymbolStatistic updatedStatistics = new SymbolStatistic();
+
+            updatedStatistics.setAppearance(existedStatistics.getAppearance() + 1);
+            updatedStatistics.setLastPrice(symbolLastPrice);
+            updatedStatistics.setSymbol(symbolToUpdate);
+
+            medianCalculatorService.addToPriorityQueue(symbolLastPrice, existedStatistics.getMaxHeap(), existedStatistics.getMinHeap());
+            updatedStatistics.setPriceMedian(medianCalculatorService.findMedian(existedStatistics.getMaxHeap(), existedStatistics.getMinHeap()));
+
+            updatedStatistics.setMaxHeap(existedStatistics.getMaxHeap());
+            updatedStatistics.setMinHeap(existedStatistics.getMinHeap());
+
+            statisticsHashMap.put(symbolToUpdate, updatedStatistics);
+        } else {
+            SymbolStatistic updatedStatistics = new SymbolStatistic();
+
+            updatedStatistics.setSymbol(symbolToUpdate);
+            updatedStatistics.setAppearance(1);
+            updatedStatistics.setLastPrice(symbolLastPrice);
+
+            medianCalculatorService.addToPriorityQueue(symbolLastPrice, updatedStatistics.getMaxHeap(), updatedStatistics.getMinHeap());
+            updatedStatistics.setPriceMedian(medianCalculatorService.findMedian(updatedStatistics.getMaxHeap(), updatedStatistics.getMinHeap()));
+
+            statisticsHashMap.put(symbolToUpdate, updatedStatistics);
+        }
     }
 }

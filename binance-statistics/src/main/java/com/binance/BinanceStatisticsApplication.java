@@ -1,20 +1,16 @@
 package com.binance;
 
-import com.binance.model.generated.Symbol;
-import com.binance.repository.StatisticsRepository;
+
 import com.binance.service.StatisticsService;
 import com.binance.websocket.BinanceWebSocketClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class BinanceStatisticsApplication {
@@ -25,13 +21,12 @@ public class BinanceStatisticsApplication {
         ConfigurableApplicationContext appContext = SpringApplication.run(BinanceStatisticsApplication.class, args);
 
 
-        StatisticsRepository repository = appContext.getBean(StatisticsRepository.class);
+        StatisticsService service = appContext.getBean(StatisticsService.class);
 
-        List<String> symbols = repository.getBinanceSymbols()
-                .getSymbols()
+        List<String> symbols = service.getBinanceSymbols()
+                .getBinanceSymbols()
                 .stream()
                 .limit(200)
-                .map(Symbol::getSymbol)
                 .toList();
 
 
@@ -51,7 +46,7 @@ public class BinanceStatisticsApplication {
 //        BinanceWebSocketClient c = new BinanceWebSocketClient(new URI(
 //                "wss://stream.binance.com:9443/ws/ethusdt@trade"));
 
-                BinanceWebSocketClient c = new BinanceWebSocketClient(new URI(webSocketUri.toString()), webSocketParams.toString());
+                BinanceWebSocketClient c = new BinanceWebSocketClient(new URI(webSocketUri.toString()), webSocketParams.toString(), service);
         c.connect();
 
       //  Thread.sleep(30 * 1000);

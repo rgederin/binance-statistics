@@ -1,22 +1,23 @@
 package com.binance.websocket;
 
-import com.binance.StatisticsCalculator;
 import com.binance.model.gson.TradeStreamEntity;
+import com.binance.service.StatisticsService;
 import com.google.gson.Gson;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
-import org.springframework.stereotype.Component;
 
 import java.net.URI;
 
 
 public class BinanceWebSocketClient extends WebSocketClient {
 
-    private String streamsParams;
+    private final String streamsParams;
+    private final StatisticsService statisticsService;
 
-    public BinanceWebSocketClient(URI serverUri, String streamsParams) {
+    public BinanceWebSocketClient(URI serverUri, String streamsParams, StatisticsService statisticsService) {
         super(serverUri);
         this.streamsParams = streamsParams;
+        this.statisticsService = statisticsService;
     }
 
 
@@ -35,9 +36,9 @@ public class BinanceWebSocketClient extends WebSocketClient {
 //        System.out.println("received: " + s);
 
         TradeStreamEntity tradeStreamEntity = new Gson().fromJson(s, TradeStreamEntity.class);
-        if (null != tradeStreamEntity.getData())
-            StatisticsCalculator.addStatistics(tradeStreamEntity);
-
+        if (null != tradeStreamEntity.getData()){
+            statisticsService.updateSymbolsStatistics(tradeStreamEntity);
+        }
     }
 
 

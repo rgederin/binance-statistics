@@ -86,8 +86,11 @@ This is quite naive implementation for such interesting challenge (I do not have
 1. Decouple web socket part which is responsible for gathering information from the WebSocket from API for getting results.
 2. Implement web socket part in some more low level language (GO for example) and implement storing information about statistics in some noSQL storage
 3. I believe my solution will die in some time since I am using in memory storage)) So as I said some noSQL storage should be used for storing live data and statistics computation should run over the data from the storage.
-4. Implement cache for /symbol endpoint
+4. Implement cache for /symbols endpoint
 5. Add production-like logging using ELK
 6. Play with concurrency - since it is testing challenge I didn't pay too much attention for this.
+7. If we are talking about custom hash map implementation - as I mentioned in the code comments, I did not implement dynamic resizing, so this could be improved.
+8. Also I omit unit/integration tests but this is quite obvious.
+
 
 
